@@ -3,7 +3,7 @@
 
 # Install
 ## Deps
-- ansible, python3-distro
+- make, ansible, python3-distro
 ## Install GUI python script, add to autostart, add user to input group
 - `make install`
 - relogin to autostart NumLock indicator
