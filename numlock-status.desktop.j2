@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NumLock status
+Comment=Run NumLock status GUI script at startup
+Exec=python3 /home/{{ lookup('env', 'USER') }}/bin/numlock_status.py
+StartupNotify=true
+Terminal=false
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true

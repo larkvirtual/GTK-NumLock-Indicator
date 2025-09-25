@@ -1,0 +1,134 @@
+---
+- name: Manage GTK NumLock Indicator GUI script
+  hosts: localhost
+  vars:
+    script_exec_path: "~/bin"
+    dependencies:
+      Altlinux: 'python3 python3-module-pygobject  python3-module-xlib python3-module-evdev'
+      Simply:   'python3 python3-module-pygobject3 python3-module-xlib python3-module-evdev'
+      AlterOS:
+        - python3
+        - python3-gobject
+        - python3-evdev
+      Fedora:
+        - python3
+        - python3-gobject
+        - python3-evdev
+      Debian:
+        - python3
+        - python3-gi
+        - python3-xlib
+        - python3-evdev
+      Ubuntu:
+        - python3
+        - python3-gi
+        - python3-evdev
+
+  tasks:
+    - name: Set package manager for ALT Linux
+      set_fact:
+        pkg_mgr: apt
+      when: ansible_distribution == 'Altlinux'
+      tags:
+        - install
+        - dependencies
+
+    - name: Set package manager for Fedora
+      set_fact:
+        pkg_mgr: dnf
+      when: ansible_distribution == 'Fedora'
+      tags:
+        - install
+        - dependencies
+
+    - name: Set package manager for Debian
+      set_fact:
+        pkg_mgr: apt
+      when: ansible_distribution == 'Debian'
+      tags:
+        - install
+        - dependencies
+
+    - name: Install dependencies on Debian
+      apt:
+        name: "{{ dependencies[ansible_distribution] }}"
+        state: present
+        update_cache: yes
+      become: yes
+      when: ansible_pkg_mgr == 'apt'
+      tags:
+        - install
+        - dependencies
+
+    - name: Install dependencies on ALT Linux
+      shell: 'apt-get update; apt-get install -y {{ dependencies[ansible_distribution] }}'
+      become: yes
+      when: ansible_pkg_mgr == 'apt_rpm'
+      tags:
+        - install
+        - dependencies
+
+    - name: Install dependencies on Fedora
+      dnf:
+        name: "{{ dependencies[ansible_distribution] }}"
+        state: present
+      become: yes
+      when: ansible_pkg_mgr == 'dnf'
+      tags:
+        - install
+        - dependencies
+
+    - name: Create directory for script
+      file:
+        path: "{{ script_exec_path }}"
+        state: directory
+        mode: '0755'
+      tags:
+        - install
+
+    - name: Copy NumLock Python script
+      copy:
+        src: numlock_status.py
+        dest: "{{ script_exec_path }}/numlock_status.py"
+        mode: '0755'
+      tags:
+        - install
+
+    - name: Create directory for autostart
+      file:
+        path: ~/.config/autostart
+        state: directory
+        mode: '0755'
+      tags:
+        - install
+
+    - name: Copy NumLock script desktop file
+      template:
+        src: numlock-status.desktop.j2
+        dest: ~/.config/autostart/numlock-status.desktop
+        mode: '0644'
+      tags:
+        - install
+
+    - name: Add current user "{{ lookup('env', 'USER') }}" to group input
+      become: yes
+      user:
+        name: "{{ lookup('env', 'USER') }}"
+        groups: input
+        append: true
+      tags:
+        - install
+
+    - name: Remove NumLock script Python script
+      file:
+        path: "{{ script_exec_path }}/numlock_status.py"
+        state: absent
+      tags:
+        - remove
+
+    - name: Remove NumLock script desktop file
+      file:
+        path: ~/.config/autostart/numlock-status.desktop
+        state: absent
+      tags:
+        - remove
